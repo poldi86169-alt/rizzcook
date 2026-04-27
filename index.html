@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RizzCook | AI Flirt Helper</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>RizzCook 🔥</h1>
+            <p class="tagline">Upload a screenshot. Let it cook.</p>
+        </div>
+
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📸</div>
+            <span class="upload-text">Click to upload your chat</span>
+            <span class="upload-hint">PNG, JPG up to 5MB</span>
+            <input type="file" id="fileInput" hidden accept="image/*">
+            <img id="preview" alt="Preview">
+        </div>
+
+        <button id="cookBtn" onclick="processRizz()" class="cook-btn">LET ME COOK 🚀</button>
+
+        <div id="result" class="result-container">
+            <div class="result-header">
+                <small>Your Rizz Response:</small>
+            </div>
+            <p id="rizzText" class="rizz-text"></p>
+            <button onclick="copyRizz()" class="copy-btn">📋 Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+
+        fileInput.onchange = evt => {
+            const [file] = fileInput.files;
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+                document.querySelector('.upload-area').classList.add('has-image');
+            }
+        }
+
+        async function processRizz() {
+            const btn = document.getElementById('cookBtn');
+            const resultDiv = document.getElementById('result');
+            const rizzText = document.getElementById('rizzText');
+            const resultHeader = document.querySelector('.result-header');
+
+            if (!fileInput.files[0]) return alert("Please upload a photo first!");
+
+            btn.disabled = true;
+            btn.innerText = "COOKING... 🔥";
+            btn.classList.add('loading');
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/rizz', { method: 'POST', body: formData });
+                const data = await response.json();
+                rizzText.innerText = data.rizz;
+                resultDiv.style.display = 'block';
+                resultDiv.classList.add('show');
+                
+                // Hide header for errors, show for successful responses
+                if (data.error) {
+                    resultHeader.style.display = 'none';
+                    resultDiv.classList.add('error-display');
+                } else {
+                    resultHeader.style.display = 'block';
+                    resultDiv.classList.remove('error-display');
+                }
+            } catch (err) {
+                alert("Error while cooking. Did you start the server?");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "LET ME COOK 🚀";
+                btn.classList.remove('loading');
+            }
+        }
+
+        function copyRizz() {
+            const text = document.getElementById('rizzText').innerText;
+            navigator.clipboard.writeText(text);
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "✅ Copied!";
+            setTimeout(() => {
+                btn.innerText = originalText;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
